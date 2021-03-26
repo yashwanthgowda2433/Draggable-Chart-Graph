@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <title>Draggable Points</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+   
+<style>
+body {
+  font-family: Helvetica Neue, Arial, sans-serif;
+  text-align: center;
+}
+
+.wrapper {
+  max-width: 800px;
+  margin: 50px auto;
+}
+
+h1 {
+  font-weight: 200;
+  font-size: 3em;
+  margin: 0 0 0.1em 0;
+}
+
+h2 {
+  font-weight: 200;
+  font-size: 0.9em;
+  margin: 0 0 50px;
+  color: #555;
+}
+
+a {
+  margin-top: 50px;
+  display: block;
+  color: #3e95cd;
+}
+	</style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <canvas id="canvas" width="1600" height="900"></canvas>
+    </div>
+
+<script>
+var x_data = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24];
+var y_data_1 = [86,114,106,106,107,111,133,221,783,478,600,700,800,900,1000,100,200,100,150,180,250,300,500,500,400];
+//var y_data_2 = [2000,700,200,100,100,100,100,50,25,0];
+var activePoint = null;
+var canvas = null;
+window.onload = function () {
+    var ctx = document.getElementById("canvas").getContext("2d");
+    canvas = document.getElementById("canvas");
+    window.myChart = Chart.Line(ctx, {
+        data: {
+            labels: x_data,
+            datasets: [
+                {
+                    data: y_data_1,
+                    label: "USD",
+                    borderColor: "#3e95cd",
+                    //fill: false
+                }
+            ]
+        },
+        options: {
+			scales: {
+              yAxes: [{
+                scaleLabel: {
+                   display: true,
+                   labelString: 'USD'
+                }
+              }]
+             },
+            animation: {
+                duration: 0
+            },
+            tooltips: {
+                mode: 'nearest'
+            }
+        }
+    });
+    canvas.onpointerdown = down_handler;
+    canvas.onpointerup = up_handler;
+    canvas.onpointermove = null;
+};
+
+function down_handler(event) {
+    const points = window.myChart.getElementAtEvent(event, {intersect: false});
+    if (points.length > 0) {
+        
+        activePoint = points[0];
+        canvas.onpointermove = move_handler;
+    };
+};
+
+function up_handler(event) {
+    
+    activePoint = null;
+    canvas.onpointermove = null;
+};
+
+function move_handler(event)
+{
+    
+    if (activePoint != null) {
+        var data = activePoint._chart.data;
+        var datasetIndex = activePoint._datasetIndex;
+        const helpers = Chart.helpers;
+        var position = helpers.getRelativePosition(event, myChart);
+        var chartArea = window.myChart.chartArea;
+        var yAxis = window.myChart.scales["y-axis-0"];
+        var yValue = map(position.y, chartArea.bottom, chartArea.top, yAxis.min, yAxis.max);
+
+        // update y value of active data point
+        data.datasets[datasetIndex].data[activePoint._index] = yValue;
+        window.myChart.update();
+    };
+};
+
+// map value to other coordinate system
+function map(value, start1, stop1, start2, stop2) {
+    return start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1))
+};
+</script>
+  </body>
+
+</html>
